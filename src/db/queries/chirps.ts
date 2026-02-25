@@ -24,3 +24,9 @@ export async function getChirpById(id: string) {
     return result
 }
 
+export async function deleteChirpById(id: string) {
+  const [result] = await db.
+    delete(chirps).where(eq(chirps.id,id));
+    return result
+}
+
