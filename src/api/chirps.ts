@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { createChirp, deleteChirpById, getChirpById, getChirps } from "../db/queries/chirps.js";
+import { createChirp, deleteChirpById, getChirpById, getChirpsByUserId, getChirps } from "../db/queries/chirps.js";
 import { handlerChirpsValidate} from "./validate_chirp.js";
 import { getBearerToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
@@ -27,10 +27,19 @@ export async function createChirpHandler(req: Request, res: Response,next:NextFu
 }
 
 export async function getChirpsHandler(req: Request, res: Response,next:NextFunction) {
+  type Params={
+    authorId?:string
+      }
     try {
-        const rows = await getChirps();
-        const result=rows
+      const params:Params={authorId: typeof req.query.authorId === "string" ? req.query.authorId : undefined}
+      if(params.authorId && (typeof params.authorId === "string"))
+      {
+        const result=await getChirpsByUserId(params.authorId);
         res.status(200).send(result);
+      }
+      else{const rows = await getChirps();
+        res.status(200).send(rows);}
+    
       } catch (err) {
         next(err);
       }
