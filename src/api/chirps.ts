@@ -28,17 +28,23 @@ export async function createChirpHandler(req: Request, res: Response,next:NextFu
 
 export async function getChirpsHandler(req: Request, res: Response,next:NextFunction) {
   type Params={
-    authorId?:string
+    authorId?:string;
+    sort?:"asc"|"desc"
       }
     try {
-      const params:Params={authorId: typeof req.query.authorId === "string" ? req.query.authorId : undefined}
+      const params:Params={
+        authorId: typeof req.query.authorId === "string" ? req.query.authorId : undefined,
+        sort: typeof req.query.sort === "string" && (req.query.sort === "asc" || req.query.sort === "desc") ? req.query.sort : "desc"
+      }
       if(params.authorId && (typeof params.authorId === "string"))
       {
-        const result=await getChirpsByUserId(params.authorId);
+        const result=await getChirpsByUserId(params.authorId, params.sort);
         res.status(200).send(result);
       }
-      else{const rows = await getChirps();
-        res.status(200).send(rows);}
+      else{
+        const rows = await getChirps(params.sort);
+        res.status(200).send(rows);
+      }
     
       } catch (err) {
         next(err);
