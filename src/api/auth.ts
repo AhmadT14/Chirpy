@@ -60,6 +60,7 @@ export async function handlerLogin(req: Request, res: Response) {
     email: user.email,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+    isChirpyRed: user.is_chirpy_red ?? false,
     token: accessToken,
     refreshToken: refreshToken,
   } satisfies LoginResponse);

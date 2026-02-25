@@ -20,6 +20,13 @@ export async function getUserByEmail(email: string) {
     .where(eq(users.email,email))
   return result;
 }
+export async function getUserById(id: string) {
+  const [result] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id,id))
+  return result;
+}
 export async function updateUserProfile(
   userId: string,
   updates: {
@@ -30,6 +37,17 @@ export async function updateUserProfile(
   const [result] = await db
     .update(users)
     .set(updates)
+    .where(eq(users.id, userId))
+    .returning();
+  return result;
+}
+
+export async function updateRedChirpy(
+  userId: string
+) {
+  const [result] = await db
+    .update(users)
+    .set({is_chirpy_red:true})
     .where(eq(users.id, userId))
     .returning();
   return result;

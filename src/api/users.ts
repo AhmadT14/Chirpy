@@ -1,13 +1,20 @@
 import type { Request, Response } from "express";
 
-import { createUser, updateUserProfile } from "../db/queries/users.js";
-import { BadRequestError } from "./errors.js";
+import { createUser, getUserById, updateRedChirpy, updateUserProfile } from "../db/queries/users.js";
+import { BadRequestError, NotFoundError, UserForbiddenError, UserNotAuthenticatedError } from "./errors.js";
 import { respondWithJSON } from "./json.js";
 import { NewUser } from "src/db/schema.js";
-import { getBearerToken, hashPassword, makeJWT, validateJWT } from "../auth.js";
+import { getAPIKey, getBearerToken, hashPassword, makeJWT, validateJWT } from "../auth.js";
 import { config } from "../config.js";
+import { verifyChirp } from "./chirps.js";
 
-export type UserResponse = Omit<NewUser, "hashedPassword">;
+export type UserResponse = {
+  id: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isChirpyRed: boolean;
+};
 
 export async function handlerUsersCreate(req: Request, res: Response) {
   type parameters = {
@@ -36,7 +43,8 @@ export async function handlerUsersCreate(req: Request, res: Response) {
     email: user.email,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-  } satisfies UserResponse);
+    isChirpyRed: user.is_chirpy_red
+  });
 }
 
 export async function handlerUpdateUserProfile(req: Request, res: Response) {
@@ -77,5 +85,46 @@ export async function handlerUpdateUserProfile(req: Request, res: Response) {
     email: user.email,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-  } satisfies UserResponse);
+    isChirpyRed: user.is_chirpy_red
+  });
+}
+
+export async function handlerUpdaterRedChirpy(req: Request, res: Response) {
+  try {
+    const apiKey = getAPIKey(req);
+    if (config.api.PolkaKey !== apiKey) {
+      throw new UserNotAuthenticatedError("Invalid API key");
+    }
+  } catch (error) {
+    throw new UserNotAuthenticatedError("Invalid API key");
+  }
+
+  type parameters = {
+    event: string;
+    data: {
+      userId: string;
+    };
+  };
+  const params: parameters = req.body;
+
+  if (!params || !params.event) {
+    res.status(204).send();
+    return;
+  }
+
+  if (!params.data || !params.data.userId) {
+    res.status(204).send();
+    return;
+  }
+
+  const userId = params.data.userId;
+
+  if (params.event === "user.upgraded") {
+    const user = await getUserById(userId);
+    if (user) {
+      await updateRedChirpy(userId);
+    }
+  }
+
+  res.status(204).send();
 }
