@@ -2,6 +2,10 @@
 
 A social media API built with TypeScript, featuring user authentication, chirp creation and retrieval, and comprehensive metrics tracking.
 
+## Acknowledgments
+
+This project was developed as part of the Boot.dev backend development journey and was guided throughout the learning process.
+
 ## Project Structure
 
 ```
